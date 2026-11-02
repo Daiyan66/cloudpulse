@@ -1,0 +1,208 @@
+{
+  "__inputs": [],
+  "__requires": [
+    { "type": "grafana", "id": "grafana", "name": "Grafana", "version": "10.0.0" },
+    { "type": "datasource", "id": "prometheus", "name": "Prometheus", "version": "1.0.0" }
+  ],
+  "annotations": { "list": [] },
+  "description": "CloudPulse — API & Uptime Monitoring Dashboard",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "title": "🚀 API Performance",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "red",   "value": 500 }
+            ]
+          },
+          "unit": "reqps"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 1 },
+      "id": 1,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "orientation": "auto", "text": {}, "textMode": "auto", "colorMode": "background", "graphMode": "area" },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "sum(rate(cloudpulse_http_requests_total[5m]))",
+        "legendFormat": "Requests/sec"
+      }],
+      "title": "Request Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green",  "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red",    "value": 0.5 }
+            ]
+          },
+          "unit": "s"
+        }
+      },
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 1 },
+      "id": 2,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "area" },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "histogram_quantile(0.95, sum(rate(cloudpulse_http_request_duration_seconds_bucket[5m])) by (le))",
+        "legendFormat": "p95 Latency"
+      }],
+      "title": "p95 API Latency",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 0.01 }, { "color": "red", "value": 0.05 }] }, "unit": "percentunit" } },
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 1 },
+      "id": 3,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "area" },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "sum(rate(cloudpulse_http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(cloudpulse_http_requests_total[5m]))",
+        "legendFormat": "Error Rate"
+      }],
+      "title": "5xx Error Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] }, "unit": "short" } },
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 1 },
+      "id": 4,
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "area" },
+      "targets": [{
+        "datasource": "Prometheus",
+        "expr": "cloudpulse_active_monitors_total",
+        "legendFormat": "Active Monitors"
+      }],
+      "title": "Active Monitors",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2, "fillOpacity": 15 }, "unit": "reqps" }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 5 },
+      "id": 5,
+      "options": { "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum(rate(cloudpulse_http_requests_total{status_code=~\"2..\"}[5m]))", "legendFormat": "2xx Success" },
+        { "datasource": "Prometheus", "expr": "sum(rate(cloudpulse_http_requests_total{status_code=~\"4..\"}[5m]))", "legendFormat": "4xx Client Error" },
+        { "datasource": "Prometheus", "expr": "sum(rate(cloudpulse_http_requests_total{status_code=~\"5..\"}[5m]))", "legendFormat": "5xx Server Error" }
+      ],
+      "title": "HTTP Requests by Status",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2, "fillOpacity": 10 }, "unit": "s" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 5 },
+      "id": 6,
+      "options": { "legend": { "calcs": ["mean", "p95"], "displayMode": "table", "placement": "bottom" } },
+      "targets": [
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.50, sum(rate(cloudpulse_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p50" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(cloudpulse_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p95" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.99, sum(rate(cloudpulse_http_request_duration_seconds_bucket[5m])) by (le))", "legendFormat": "p99" }
+      ],
+      "title": "API Latency Percentiles",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 13 },
+      "id": 101,
+      "title": "🖥️ System Resources",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }, "unit": "bytes", "min": 0 } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "id": 7,
+      "targets": [
+        { "datasource": "Prometheus", "expr": "cloudpulse_process_resident_memory_bytes", "legendFormat": "RSS Memory" },
+        { "datasource": "Prometheus", "expr": "cloudpulse_nodejs_heap_size_used_bytes", "legendFormat": "Heap Used" },
+        { "datasource": "Prometheus", "expr": "cloudpulse_nodejs_heap_size_total_bytes", "legendFormat": "Heap Total" }
+      ],
+      "title": "Memory Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }, "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "id": 8,
+      "targets": [
+        { "datasource": "Prometheus", "expr": "rate(cloudpulse_process_cpu_seconds_total[1m]) * 100", "legendFormat": "CPU Usage %" },
+        { "datasource": "Prometheus", "expr": "cloudpulse_nodejs_active_handles_total", "legendFormat": "Active Handles" },
+        { "datasource": "Prometheus", "expr": "cloudpulse_nodejs_active_requests_total", "legendFormat": "Active Requests" }
+      ],
+      "title": "CPU & Event Loop",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 22 },
+      "id": 102,
+      "title": "📡 Ping Monitor Stats",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2, "fillOpacity": 20 }, "unit": "short" } },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 23 },
+      "id": 9,
+      "targets": [
+        { "datasource": "Prometheus", "expr": "sum(rate(cloudpulse_ping_checks_total{status=\"up\"}[5m]))", "legendFormat": "✅ Up checks/s" },
+        { "datasource": "Prometheus", "expr": "sum(rate(cloudpulse_ping_checks_total{status=\"down\"}[5m]))", "legendFormat": "❌ Down checks/s" }
+      ],
+      "title": "Ping Check Rate (Up vs Down)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" }, "custom": { "lineWidth": 2 }, "unit": "ms" } },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 23 },
+      "id": 10,
+      "targets": [
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.50, sum(rate(cloudpulse_ping_response_time_ms_bucket[5m])) by (le))", "legendFormat": "p50 Response" },
+        { "datasource": "Prometheus", "expr": "histogram_quantile(0.95, sum(rate(cloudpulse_ping_response_time_ms_bucket[5m])) by (le))", "legendFormat": "p95 Response" }
+      ],
+      "title": "Ping Response Time Percentiles",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 38,
+  "tags": ["cloudpulse", "nodejs", "uptime"],
+  "templating": { "list": [] },
+  "time": { "from": "now-1h", "to": "now" },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "CloudPulse — API & Uptime Monitor",
+  "uid": "cloudpulse-main",
+  "version": 1
+}

@@ -1,0 +1,42 @@
+version: '3.9'
+
+# Production overrides — use with:
+# docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+services:
+  backend:
+    image: ${DOCKERHUB_USERNAME}/cloudpulse-backend:${IMAGE_TAG:-latest}
+    build: null   # disable local build in prod — use pre-built image
+    restart: always
+    environment:
+      NODE_ENV: production
+      LOG_LEVEL: info
+    env_file: ./backend/.env.production
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  frontend:
+    image: ${DOCKERHUB_USERNAME}/cloudpulse-frontend:${IMAGE_TAG:-latest}
+    build: null
+    restart: always
+    logging:
+      driver: json-file
+      options:
+        max-size: "5m"
+        max-file: "3"
+
+  nginx:
+    restart: always
+    # In production, add SSL via Certbot volume mounts here
+
+  prometheus:
+    restart: always
+
+  grafana:
+    restart: always
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_SERVER_ROOT_URL: https://${DOMAIN}/grafana

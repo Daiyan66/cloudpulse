@@ -1,0 +1,37 @@
+global:
+  scrape_interval: 15s      # How often to scrape targets
+  evaluation_interval: 15s  # How often to evaluate rules
+  scrape_timeout: 10s
+
+# Alerting (placeholder — configure Alertmanager in Phase 9)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: []
+
+# Rule files
+rule_files: []
+
+# ─── Scrape Configurations ────────────────────────────────────────────────────
+scrape_configs:
+
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # CloudPulse Backend — scrapes the /metrics endpoint
+  - job_name: 'cloudpulse-backend'
+    static_configs:
+      - targets: ['backend:5000']
+    metrics_path: /metrics
+    scrape_interval: 10s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'cloudpulse-backend'
+
+  # cAdvisor for container metrics (add container in docker-compose for full monitoring)
+  # - job_name: 'cadvisor'
+  #   static_configs:
+  #     - targets: ['cadvisor:8080']

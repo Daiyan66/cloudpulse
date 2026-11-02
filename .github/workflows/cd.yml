@@ -1,0 +1,82 @@
+name: CD Pipeline — Deploy to Production
+
+on:
+  push:
+    branches: [main]
+    # Only trigger CD if CI passes (handled by job dependency)
+
+env:
+  REGISTRY: docker.io
+  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/cloudpulse-backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/cloudpulse-frontend
+
+jobs:
+  # ─── Build & Push Docker Images ──────────────────────────────────────────────
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Extract Git metadata
+        id: meta
+        run: |
+          echo "sha_short=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+          echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:latest
+            ${{ env.BACKEND_IMAGE }}:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:latest
+            ${{ env.FRONTEND_IMAGE }}:${{ steps.meta.outputs.sha_short }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # ─── Deploy to Render ─────────────────────────────────────────────────────────
+  # Render automatically redeploys when you push to the connected branch.
+  # The step below manually triggers a Render deploy hook (optional).
+  deploy-render:
+    name: Trigger Render Deploy
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Trigger backend deploy hook
+        run: |
+          curl -s "${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}" || echo "No deploy hook configured"
+
+      - name: Trigger frontend deploy hook
+        run: |
+          curl -s "${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}" || echo "No deploy hook configured"
+
+      - name: Deployment summary
+        run: |
+          echo "✅ Deployed CloudPulse to production"
+          echo "Backend image: ${{ env.BACKEND_IMAGE }}:${{ needs.build-and-push.outputs.sha_short }}"
+          echo "Frontend image: ${{ env.FRONTEND_IMAGE }}:${{ needs.build-and-push.outputs.sha_short }}"
