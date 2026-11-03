@@ -193,6 +193,55 @@
       ],
       "title": "Ping Response Time Percentiles",
       "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 31 },
+      "id": 200,
+      "title": "🐳 Container Health & Resources (cAdvisor)",
+      "type": "row"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 15 },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 32 },
+      "id": 11,
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "sum(rate(container_cpu_usage_seconds_total{name=~\"cloudpulse-.*\"}[1m])) by (name)",
+          "legendFormat": "{{ name }}"
+        }
+      ],
+      "title": "Container CPU Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": { "lineWidth": 2, "fillOpacity": 15 },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 32 },
+      "id": 12,
+      "targets": [
+        {
+          "datasource": "Prometheus",
+          "expr": "container_memory_working_set_bytes{name=~\"cloudpulse-.*\"}",
+          "legendFormat": "{{ name }}"
+        }
+      ],
+      "title": "Container Memory Usage",
+      "type": "timeseries"
     }
   ],
   "refresh": "10s",

@@ -3,14 +3,15 @@ global:
   evaluation_interval: 15s  # How often to evaluate rules
   scrape_timeout: 10s
 
-# Alerting (placeholder — configure Alertmanager in Phase 9)
+# Alerting
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: []
+        - targets: ['alertmanager:9093']
 
 # Rule files
-rule_files: []
+rule_files:
+  - 'alerts.yml'
 
 # ─── Scrape Configurations ────────────────────────────────────────────────────
 scrape_configs:
@@ -31,7 +32,12 @@ scrape_configs:
         target_label: instance
         replacement: 'cloudpulse-backend'
 
-  # cAdvisor for container metrics (add container in docker-compose for full monitoring)
-  # - job_name: 'cadvisor'
-  #   static_configs:
-  #     - targets: ['cadvisor:8080']
+  # cAdvisor for container metrics
+  - job_name: 'cadvisor'
+    static_configs:
+      - targets: ['cadvisor:8080']
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        replacement: 'cadvisor'

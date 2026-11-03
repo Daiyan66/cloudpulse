@@ -33,6 +33,12 @@ services:
   prometheus:
     restart: always
 
+  alertmanager:
+    restart: always
+
+  cadvisor:
+    restart: always
+
   grafana:
     restart: always
     environment:

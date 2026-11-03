@@ -7,6 +7,7 @@ networks:
 volumes:
   prometheus-data:
   grafana-data:
+  alertmanager-data:
 
 # ─── Services ─────────────────────────────────────────────────────────────────
 services:
@@ -68,6 +69,45 @@ services:
     labels:
       - "com.cloudpulse.service=nginx"
 
+  # ── Alertmanager ─────────────────────────────────────────────────────────────
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: cloudpulse-alertmanager
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:9093:9093"
+    volumes:
+      - ./monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/alertmanager
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    networks:
+      - cloudpulse-net
+    labels:
+      - "com.cloudpulse.service=alertmanager"
+
+  # ── cAdvisor ─────────────────────────────────────────────────────────────────
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cloudpulse-cadvisor
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    privileged: true
+    devices:
+      - /dev/kmsg
+    networks:
+      - cloudpulse-net
+    labels:
+      - "com.cloudpulse.service=cadvisor"
+
   # ── Prometheus ────────────────────────────────────────────────────────────────
   prometheus:
     image: prom/prometheus:latest
@@ -77,6 +117,7 @@ services:
       - "127.0.0.1:9090:9090"
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus-data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -87,6 +128,8 @@ services:
       - '--web.enable-lifecycle'
     networks:
       - cloudpulse-net
+    depends_on:
+      - alertmanager
     labels:
       - "com.cloudpulse.service=prometheus"
 

@@ -42,6 +42,13 @@ const pingResponseTime = new promClient.Histogram({
   buckets: [50, 100, 200, 500, 1000, 2000, 5000],
 });
 
+/** Counter for incoming Alertmanager alerts */
+const alertsReceivedTotal = new promClient.Counter({
+  name: 'cloudpulse_alerts_received_total',
+  help: 'Total number of alerts received from Alertmanager',
+  labelNames: ['status', 'severity', 'alertname'],
+});
+
 module.exports = {
   register: promClient.register,
   httpRequestsTotal,
@@ -49,4 +56,5 @@ module.exports = {
   activeMonitorsGauge,
   pingChecksTotal,
   pingResponseTime,
+  alertsReceivedTotal,
 };

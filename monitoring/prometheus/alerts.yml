@@ -1,0 +1,92 @@
+groups:
+  - name: cloudpulse-service-alerts
+    rules:
+      # ── Service Availability ──────────────────────────────────────────────
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Service {{ $labels.instance }} is down"
+          description: "Target {{ $labels.instance }} in job {{ $labels.job }} has been unreachable for more than 1 minute."
+
+      # ── API Error Rate ───────────────────────────────────────────────────
+      - alert: HighHttpErrorRate5xx
+        expr: |
+          (
+            sum(rate(cloudpulse_http_requests_total{status_code=~"5.."}[5m]))
+            /
+            (sum(rate(cloudpulse_http_requests_total[5m])) > 0)
+          ) * 100 > 5
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High 5xx error rate detected on CloudPulse API"
+          description: "Over 5% of API requests resulted in HTTP 5xx errors over the last 5 minutes (current: {{ $value | printf \"%.2f\" }}%)."
+
+      # ── API Response Latency ──────────────────────────────────────────────
+      - alert: HighApiResponseLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(cloudpulse_http_request_duration_seconds_bucket[5m])) by (le)) > 1.0
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "CloudPulse API 95th percentile latency is high"
+          description: "The 95th percentile request latency exceeds 1 second for more than 3 minutes (current: {{ $value | printf \"%.2f\" }}s)."
+
+      # ── Synthetic Ping Failures ──────────────────────────────────────────
+      - alert: HighPingFailureRate
+        expr: |
+          (
+            sum(rate(cloudpulse_ping_checks_total{status="down"}[5m]))
+            /
+            (sum(rate(cloudpulse_ping_checks_total[5m])) > 0)
+          ) * 100 > 25
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Elevated ping check failure rate"
+          description: "Over 25% of synthetic monitor pings are failing across targets (current: {{ $value | printf \"%.2f\" }}%)."
+
+      # ── Slow Ping Latency ────────────────────────────────────────────────
+      - alert: HighPingResponseTime
+        expr: |
+          histogram_quantile(0.95, sum(rate(cloudpulse_ping_response_time_ms_bucket[5m])) by (le)) > 3000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High target response time on synthetic pings"
+          description: "95th percentile target ping response time is above 3000ms for more than 5 minutes."
+
+  - name: cloudpulse-container-alerts
+    rules:
+      # ── Container Memory Pressure ────────────────────────────────────────
+      - alert: ContainerHighMemoryUsage
+        expr: |
+          (
+            container_memory_working_set_bytes{name=~"cloudpulse-.*"}
+            /
+            container_spec_memory_limit_bytes{name=~"cloudpulse-.*"} > 0
+          ) * 100 > 85
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} high memory usage"
+          description: "Container {{ $labels.name }} memory usage is above 85% of limit (current: {{ $value | printf \"%.2f\" }}%)."
+
+      # ── Container Restart Detected ───────────────────────────────────────
+      - alert: ContainerRestartingFrequently
+        expr: |
+          rate(container_start_time_seconds{name=~"cloudpulse-.*"}[15m]) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} restarting frequently"
+          description: "Container {{ $labels.name }} has restarted within the last 15 minutes."

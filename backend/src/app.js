@@ -19,6 +19,7 @@ const logger = require('./utils/logger');
 const healthRouter  = require('./routes/health');
 const authRouter    = require('./routes/auth');
 const monitorRouter = require('./routes/monitors');
+const alertsRouter  = require('./routes/alerts');
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.use(metricsMiddleware);
 app.use('/health',        healthRouter);
 app.use('/api/auth',      authRouter);
 app.use('/api/monitors',  monitorRouter);
+app.use('/api/alerts',    alertsRouter);
 
 /** Prometheus scrape endpoint */
 app.get('/metrics', async (_req, res) => {
