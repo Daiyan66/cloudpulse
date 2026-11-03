@@ -37,7 +37,7 @@ const monitorSchema = new mongoose.Schema(
     lastStatusCode: { type: Number, default: null },
     lastResponseTimeMs: { type: Number, default: null },
     isUp: { type: Boolean, default: null },       // current status
-    uptimePercentage: { type: Number, default: null }, // rolling 7-day uptime %
+    uptimePercentage: { type: Number, default: null }, // rolling 24-hour uptime %
   },
   {
     timestamps: true,

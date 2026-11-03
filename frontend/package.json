@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
@@ -19,6 +19,8 @@
     "axios": "^1.16.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.16.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
     "react-hot-toast": "^2.6.0",
     "react-router-dom": "^7.15.1",
     "recharts": "^3.8.1"

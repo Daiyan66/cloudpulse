@@ -26,7 +26,7 @@ exports.createMonitor = asyncHandler(async (req, res) => {
 
   // Register the cron job immediately so first check happens without waiting
   pingService.registerMonitor(monitor);
-  activeMonitorsGauge.inc();
+  activeMonitorsGauge.set(pingService.getActiveCount());
 
   res.status(201).json({ success: true, data: monitor });
 });
@@ -50,11 +50,11 @@ exports.updateMonitor = asyncHandler(async (req, res, next) => {
 
   if (!monitor) return next(createError('Monitor not found.', 404));
 
-  // Re-register the cron job with new interval / active state
   pingService.unregisterMonitor(monitor.id);
   if (monitor.isActive) {
     pingService.registerMonitor(monitor);
   }
+  activeMonitorsGauge.set(pingService.getActiveCount());
 
   res.json({ success: true, data: monitor });
 });
@@ -66,7 +66,7 @@ exports.deleteMonitor = asyncHandler(async (req, res, next) => {
 
   await PingResult.deleteMany({ monitor: monitor._id });
   pingService.unregisterMonitor(monitor.id);
-  activeMonitorsGauge.dec();
+  activeMonitorsGauge.set(pingService.getActiveCount());
 
   res.json({ success: true, message: 'Monitor deleted.' });
 });

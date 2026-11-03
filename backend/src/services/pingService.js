@@ -1,20 +1,26 @@
 'use strict';
 
 const axios = require('axios');
-const cron = require('node-cron');
 const Monitor = require('../models/Monitor');
 const PingResult = require('../models/PingResult');
 const logger = require('../utils/logger');
 const { pingChecksTotal, pingResponseTime, activeMonitorsGauge } = require('../utils/metrics');
 
-/** Map of monitorId → cron task instance */
+/** Map of monitorId → interval task instance */
 const activeTasks = new Map();
 
 /**
  * Perform a single HTTP ping for a monitor.
+ * Re-fetches the monitor from DB to avoid stale data in long-running intervals.
  * Saves a PingResult and updates the Monitor's denormalized fields.
  */
-async function pingMonitor(monitor) {
+async function pingMonitor(monitorId) {
+  const monitor = await Monitor.findById(monitorId);
+  if (!monitor || !monitor.isActive) {
+    unregisterMonitor(monitorId);
+    return;
+  }
+
   const startTime = Date.now();
   let result = { statusCode: null, responseTimeMs: 0, isUp: false, error: null };
 
@@ -76,35 +82,35 @@ async function pingMonitor(monitor) {
 }
 
 /**
- * Register a cron job for a monitor.
- * Uses a fixed interval (every N seconds) approach via a 1-second cron tick.
+ * Register an interval job for a monitor.
  */
 function registerMonitor(monitor) {
-  if (!monitor.isActive) return;
-  if (activeTasks.has(String(monitor._id || monitor.id))) {
-    unregisterMonitor(String(monitor._id || monitor.id));
+  if (!monitor.isActive) { return; }
+
+  const monitorId = String(monitor._id || monitor.id);
+  if (activeTasks.has(monitorId)) {
+    unregisterMonitor(monitorId);
   }
 
   const intervalSec = monitor.intervalSeconds || 60;
-  // node-cron only supports per-minute granularity, so we use setInterval for sub-minute
   const intervalMs = intervalSec * 1000;
 
   const task = setInterval(() => {
-    pingMonitor(monitor).catch((err) =>
-      logger.error(`Unhandled ping error for ${monitor.url}: ${err.message}`)
+    pingMonitor(monitorId).catch((err) =>
+      logger.error(`Unhandled ping error for monitor ${monitorId}: ${err.message}`)
     );
   }, intervalMs);
 
-  activeTasks.set(String(monitor._id || monitor.id), task);
+  activeTasks.set(monitorId, task);
   logger.info(`📡 Registered monitor: [${monitor.name}] — every ${intervalSec}s`);
 
   // Run first check immediately (don't wait for the first interval)
-  pingMonitor(monitor).catch((err) =>
-    logger.error(`Initial ping error for ${monitor.url}: ${err.message}`)
+  pingMonitor(monitorId).catch((err) =>
+    logger.error(`Initial ping error for monitor ${monitorId}: ${err.message}`)
   );
 }
 
-/** Stop the cron job for a monitor */
+/** Stop the interval job for a monitor */
 function unregisterMonitor(monitorId) {
   const task = activeTasks.get(String(monitorId));
   if (task) {

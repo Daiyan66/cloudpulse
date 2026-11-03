@@ -31,7 +31,7 @@ app.use(
     origin: (origin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       // Allow all localhost origins in development to prevent port conflicts
-      if (!origin || allowedOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+      if (!origin || allowedOrigins.includes(origin) || (process.env.NODE_ENV !== 'production' && origin.startsWith('http://localhost:'))) {
         return callback(null, true);
       }
       callback(new Error('Not allowed by CORS'));

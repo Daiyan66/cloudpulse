@@ -26,5 +26,4 @@ Thumbs.db
 # Docker volumes
 postgres_data/
 
-# Prisma
-backend/prisma/migrations/**/migration_lock.toml
+

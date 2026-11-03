@@ -23,6 +23,9 @@ const pingResultSchema = new mongoose.Schema(
 // Compound index for fast "get history for monitor" queries, sorted newest-first
 pingResultSchema.index({ monitor: 1, checkedAt: -1 });
 
+// Auto-delete ping results older than 30 days
+pingResultSchema.index({ checkedAt: 1 }, { expireAfterSeconds: 30 * 24 * 60 * 60 });
+
 pingResultSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,

@@ -20,6 +20,11 @@ describe('Auth API', () => {
 
   let authToken;
 
+  afterAll(async () => {
+    const mongoose = require('mongoose');
+    await mongoose.disconnect();
+  });
+
   // ─── Register ──────────────────────────────────────────────────────────────
   describe('POST /api/auth/register', () => {
     it('should register a new user and return a token', async () => {

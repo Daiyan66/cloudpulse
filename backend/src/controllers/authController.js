@@ -47,6 +47,8 @@ exports.login = asyncHandler(async (req, res, next) => {
     return next(createError('Invalid email or password.', 401));
   }
 
+  // Strip password hash before serializing response
+  user.password = undefined;
   sendAuthResponse(res, 200, user);
 });
 

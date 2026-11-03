@@ -15,6 +15,8 @@ jobs:
   build-and-push:
     name: Build & Push Images
     runs-on: ubuntu-latest
+    outputs:
+      sha_short: ${{ steps.meta.outputs.sha_short }}
 
     steps:
       - name: Checkout code
