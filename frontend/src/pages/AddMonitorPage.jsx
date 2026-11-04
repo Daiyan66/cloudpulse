@@ -17,12 +17,24 @@ export default function AddMonitorPage() {
   const { createMonitor } = useMonitors();
   const navigate = useNavigate();
 
-  const [form, setForm]       = useState({ name: '', url: '', intervalSeconds: 60 });
+  const [form, setForm]       = useState({
+    name: '',
+    url: '',
+    intervalSeconds: 60,
+    isPublic: true,
+    alertWebhookUrl: '',
+    alertEmail: '',
+  });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: name === 'intervalSeconds' ? parseInt(value, 10) : value }));
+    const { name, value, type, checked } = e.target;
+    setForm((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox'
+        ? checked
+        : (name === 'intervalSeconds' ? parseInt(value, 10) : value),
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -101,6 +113,38 @@ export default function AddMonitorPage() {
               ))}
             </select>
           </div>
+        </div>
+
+        {/* Alert Webhook */}
+        <div>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '0.375rem' }}>
+            Alert Webhook URL (Slack / Discord / Custom)
+          </label>
+          <input
+            className="input-field"
+            name="alertWebhookUrl"
+            value={form.alertWebhookUrl}
+            onChange={handleChange}
+            placeholder="https://hooks.slack.com/services/..."
+          />
+          <p style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', margin: '0.25rem 0 0' }}>
+            Instant notifications dispatched when this monitor transitions down or recovers.
+          </p>
+        </div>
+
+        {/* Public Status Page Toggle */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+          <input
+            type="checkbox"
+            id="isPublic"
+            name="isPublic"
+            checked={form.isPublic}
+            onChange={handleChange}
+            style={{ width: 16, height: 16, accentColor: '#6366f1', cursor: 'pointer' }}
+          />
+          <label htmlFor="isPublic" style={{ fontSize: '0.8125rem', fontWeight: 500, cursor: 'pointer' }}>
+            Show on Public Status Page (/status)
+          </label>
         </div>
 
         {/* Preview box */}

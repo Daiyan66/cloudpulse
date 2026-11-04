@@ -5,6 +5,7 @@ const Monitor = require('../models/Monitor');
 const PingResult = require('../models/PingResult');
 const logger = require('../utils/logger');
 const { pingChecksTotal, pingResponseTime, activeMonitorsGauge } = require('../utils/metrics');
+const { sendMonitorAlert } = require('./notificationService');
 
 /** Map of monitorId → interval task instance */
 const activeTasks = new Map();
@@ -67,6 +68,14 @@ async function pingMonitor(monitorId) {
       isUp: result.isUp,
       uptimePercentage,
     });
+
+    // ─── Dispatch Down / Recovered alerts on state transition ───────────────
+    if (monitor.isUp !== null && monitor.isUp !== result.isUp) {
+      const event = result.isUp ? 'RECOVERED' : 'DOWN';
+      sendMonitorAlert(monitor, event, result).catch((err) =>
+        logger.error(`Alert dispatch failed for ${monitor.name}: ${err.message}`)
+      );
+    }
   } catch (dbErr) {
     logger.error(`Failed to save ping result for ${monitor.url}: ${dbErr.message}`);
   }

@@ -1,0 +1,42 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cloudpulse-ingress
+  namespace: cloudpulse
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+spec:
+  tls:
+    - hosts:
+        - cloudpulse.example.com
+      secretName: cloudpulse-tls
+  rules:
+    - host: cloudpulse.example.com
+      http:
+        paths:
+          # Backend API & Health
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: cloudpulse-backend
+                port:
+                  number: 5000
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: cloudpulse-backend
+                port:
+                  number: 5000
+          # Frontend SPA fallback
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: cloudpulse-frontend
+                port:
+                  number: 80

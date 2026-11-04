@@ -12,6 +12,7 @@ import AddMonitorPage    from './pages/AddMonitorPage';
 import MonitorDetailPage from './pages/MonitorDetailPage';
 import AnalyticsPage     from './pages/AnalyticsPage';
 import SettingsPage      from './pages/SettingsPage';
+import StatusPage        from './pages/StatusPage';
 
 export default function App() {
   return (
@@ -34,6 +35,9 @@ export default function App() {
         />
 
         <Routes>
+          {/* Public status page */}
+          <Route path="/status" element={<StatusPage />} />
+
           {/* Public routes */}
           <Route element={<PublicOnlyRoute />}>
             <Route path="/login"    element={<LoginPage />} />

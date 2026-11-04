@@ -14,3 +14,7 @@ export const monitorService = {
   remove: (id) => apiClient.delete(`/monitors/${id}`),
   getPingHistory: (id, params) => apiClient.get(`/monitors/${id}/history`, { params }),
 };
+
+export const statusService = {
+  getPublic: () => apiClient.get('/status/public'),
+};

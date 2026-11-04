@@ -32,6 +32,20 @@ const monitorSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isPublic: {
+      type: Boolean,
+      default: true,
+    },
+    alertWebhookUrl: {
+      type: String,
+      trim: true,
+      default: null,
+    },
+    alertEmail: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     // ─── Denormalized stats (updated on each ping) ────────────────────────────
     lastCheckedAt: { type: Date, default: null },
     lastStatusCode: { type: Number, default: null },

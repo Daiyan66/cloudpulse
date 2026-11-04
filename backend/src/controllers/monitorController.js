@@ -15,13 +15,16 @@ exports.getMonitors = asyncHandler(async (req, res) => {
 
 // ─── POST /api/monitors ───────────────────────────────────────────────────────
 exports.createMonitor = asyncHandler(async (req, res) => {
-  const { name, url, intervalSeconds } = req.body;
+  const { name, url, intervalSeconds, isPublic, alertWebhookUrl, alertEmail } = req.body;
 
   const monitor = await Monitor.create({
     user: req.user.id,
     name,
     url,
     intervalSeconds: intervalSeconds || 60,
+    isPublic: isPublic !== undefined ? isPublic : true,
+    alertWebhookUrl: alertWebhookUrl || null,
+    alertEmail: alertEmail || null,
   });
 
   // Register the cron job immediately so first check happens without waiting
@@ -40,11 +43,11 @@ exports.getMonitor = asyncHandler(async (req, res, next) => {
 
 // ─── PUT /api/monitors/:id ────────────────────────────────────────────────────
 exports.updateMonitor = asyncHandler(async (req, res, next) => {
-  const { name, url, intervalSeconds, isActive } = req.body;
+  const { name, url, intervalSeconds, isActive, isPublic, alertWebhookUrl, alertEmail } = req.body;
 
   const monitor = await Monitor.findOneAndUpdate(
     { _id: req.params.id, user: req.user.id },
-    { name, url, intervalSeconds, isActive },
+    { name, url, intervalSeconds, isActive, isPublic, alertWebhookUrl, alertEmail },
     { new: true, runValidators: true }
   );
 

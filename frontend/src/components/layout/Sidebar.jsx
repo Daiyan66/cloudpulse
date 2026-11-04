@@ -1,13 +1,14 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
-  LayoutDashboard, PlusCircle, Activity, Settings, LogOut, Zap,
+  LayoutDashboard, PlusCircle, Activity, Settings, LogOut, Zap, Globe,
 } from 'lucide-react';
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { to: '/monitors/new', icon: PlusCircle,    label: 'Add Monitor' },
   { to: '/analytics',   icon: Activity,       label: 'Analytics'   },
+  { to: '/status',      icon: Globe,          label: 'Status Page' },
   { to: '/settings',    icon: Settings,       label: 'Settings'    },
 ];
 
